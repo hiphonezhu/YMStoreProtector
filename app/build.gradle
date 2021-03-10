@@ -55,6 +55,14 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def newName
+            newName = 'YMProtector.apk'
+            outputFileName = new File(newName)
+        }
+    }
 }
 
 dependencies {
