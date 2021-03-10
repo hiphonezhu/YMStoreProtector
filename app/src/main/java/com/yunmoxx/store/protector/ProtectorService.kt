@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.yunmoxx.store.system.IStoreService
 
@@ -49,17 +50,20 @@ class ProtectorService : Service() {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             iRemoteService = IStoreService.Stub.asInterface(service)
+            Log.d(channelId, "已连接主程序服务，正在重启主程序")
             iRemoteService?.startApp()
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
             iRemoteService = null
+            Log.d(channelId, "与主程序服务断开，正在尝试重连")
             startAndBindAppService(this)
         }
     }
 
     private val binder = object : IStoreService.Stub() {
         override fun startApp() {
+            Log.d(channelId, "正在重启守护进程")
             val intent = Intent(this@ProtectorService, EmptyActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             this@ProtectorService.startActivity(intent)
