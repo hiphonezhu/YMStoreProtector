@@ -18,6 +18,10 @@ import com.yunmoxx.store.system.IStoreService
  */
 class ProtectorService : Service() {
 
+    companion object {
+        const val appPackageName = "com.yunmoxx.store"
+    }
+
     private val channelId = "ProtectorService"
 
     private var iRemoteService: IStoreService? = null
@@ -50,20 +54,20 @@ class ProtectorService : Service() {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             iRemoteService = IStoreService.Stub.asInterface(service)
-            Log.d(channelId, "已连接主程序服务，正在重启主程序")
+            Log.d(channelId, "服务监控：已连接主程序服务，正在重启主程序")
             iRemoteService?.startApp()
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
             iRemoteService = null
-            Log.d(channelId, "与主程序服务断开，正在尝试重连")
+            Log.d(channelId, "服务监控：与主程序服务断开，正在尝试重连")
             startAndBindAppService(this)
         }
     }
 
     private val binder = object : IStoreService.Stub() {
         override fun startApp() {
-            Log.d(channelId, "正在重启守护进程")
+            Log.d(channelId, "服务监控：主程序正在尝试重启守护进程")
             val intent = Intent(this@ProtectorService, EmptyActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             this@ProtectorService.startActivity(intent)
@@ -71,9 +75,10 @@ class ProtectorService : Service() {
     }
 
     private fun startAndBindAppService(connection: ServiceConnection) {
+        Log.d(channelId, "服务监控：正在重启主程序")
         val appServiceIntent = Intent()
         appServiceIntent.component =
-            ComponentName("com.yunmoxx.store", "com.yunmoxx.store.system.AppService")
+            ComponentName(appPackageName, "com.yunmoxx.store.system.AppService")
         startService(appServiceIntent)
         bindService(appServiceIntent, connection, Context.BIND_IMPORTANT)
     }
