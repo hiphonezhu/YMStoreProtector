@@ -4,10 +4,12 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
 import android.util.Log
-import com.umeng.umcrash.UMCrash
+import java.io.File
 
 /**
  * @author hyvenzhu
@@ -18,34 +20,58 @@ class AppDroid : Application() {
     companion object {
         const val umAppKeyDebug = "604eeea56ee47d382b81ca3c"
         const val umAppKeyRelease = "604eed4bb8c8d45c139b8c26"
+
+        /**
+         * 重启应用
+         *
+         * @param context
+         * @param intent
+         */
+        fun triggerRebirth(context: Context, intent: Intent?) {
+            val targetIntent =
+                intent ?: context.packageManager.getLaunchIntentForPackage(context.packageName)
+            targetIntent!!.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            context.startActivity(targetIntent)
+            Runtime.getRuntime().exit(0)
+        }
+
+        /**
+         * 获得磁盘缓存目录 [PS：应用卸载后会被自动删除]
+         *
+         * @param context
+         * @param uniqueName
+         * @return
+         */
+        fun getDiskCacheDir(context: Context, uniqueName: String): File {
+            val cachePath: String
+            if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState() || !Environment.isExternalStorageRemovable()) {
+                var dir = context.applicationContext.externalCacheDir
+                if (dir == null) {
+                    dir = context.applicationContext.cacheDir
+                }
+                cachePath = dir!!.path
+            } else {
+                val dir = context.applicationContext.cacheDir
+                cachePath = dir.path
+            }
+            val dir: File
+            dir = if (TextUtils.isEmpty(uniqueName)) {
+                File(cachePath)
+            } else {
+                File(cachePath + File.separator + uniqueName)
+            }
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+            return dir
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
-        UMApp.init(
-            this,
-            BuildConfig.DEBUG,
-            if (BuildConfig.DEBUG) umAppKeyDebug else umAppKeyRelease
-        )
+        UMApp.init(this, BuildConfig.DEBUG, if (BuildConfig.DEBUG) umAppKeyDebug else umAppKeyRelease)
         loop()
-        Thread.setDefaultUncaughtExceptionHandler { _, e ->
-            UMCrash.generateCustomLog(e, "YMStoreProtector")
-            triggerRebirth(this, null)
-        }
-    }
-
-    /**
-     * 重启应用
-     *
-     * @param context
-     * @param intent
-     */
-    private fun triggerRebirth(context: Context, intent: Intent?) {
-        val targetIntent =
-            intent ?: context.packageManager.getLaunchIntentForPackage(context.packageName)
-        targetIntent!!.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        context.startActivity(targetIntent)
-        Runtime.getRuntime().exit(0)
+        CrashUtils.init(this)
     }
 
     /**
