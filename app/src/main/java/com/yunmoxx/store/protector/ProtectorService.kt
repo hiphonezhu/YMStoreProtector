@@ -24,7 +24,7 @@ class ProtectorService : Service() {
 
     private val channelId = "ProtectorService"
 
-    private var iRemoteService: IStoreService? = null
+    private var iStoreService: IStoreService? = null
 
     override fun onBind(intent: Intent?): IBinder? = binder
 
@@ -39,7 +39,7 @@ class ProtectorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (iRemoteService == null) {
+        if (iStoreService == null) {
             startAndBindAppService(mConnection)
         }
         return START_STICKY
@@ -53,13 +53,14 @@ class ProtectorService : Service() {
     private val mConnection = object : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            iRemoteService = IStoreService.Stub.asInterface(service)
+            iStoreService = IStoreService.Stub.asInterface(service)
+            binder.linkToDeath(deathRecipient, 0)
             Log.d(channelId, "服务监控：已连接主程序服务，正在重启主程序")
-            iRemoteService?.startApp()
+            iStoreService?.startApp()
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            iRemoteService = null
+            iStoreService = null
             Log.d(channelId, "服务监控：与主程序服务断开，正在尝试重连")
             startAndBindAppService(this)
         }
@@ -67,6 +68,7 @@ class ProtectorService : Service() {
 
     private val binder = object : IStoreService.Stub() {
         override fun startApp() {
+
             Log.d(channelId, "服务监控：主程序正在尝试重启守护进程")
             val intent = Intent(this@ProtectorService, EmptyActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -74,8 +76,18 @@ class ProtectorService : Service() {
         }
     }
 
+    private val deathRecipient: IBinder.DeathRecipient = object : IBinder.DeathRecipient {
+        override fun binderDied() {
+            iStoreService?.let {
+                it.asBinder().unlinkToDeath(this, 0);
+                iStoreService = null
+                startAndBindAppService(mConnection)
+            }
+        }
+    }
+
     private fun startAndBindAppService(connection: ServiceConnection) {
-        Log.d(channelId, "服务监控：正在重启主程序")
+        Log.d(channelId, "服务监控：正在连接主程序服务")
         val appServiceIntent = Intent()
         appServiceIntent.component =
             ComponentName(appPackageName, "com.yunmoxx.store.system.AppService")
