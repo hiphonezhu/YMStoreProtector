@@ -2,24 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.yunmoxx.store.protector">
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".AppDroid"
         android:icon="@drawable/icon_app_logo"
-        android:label="@string/app_name"
-        android:theme="@style/Theme.YMStoreProtector">
+        android:label="@string/app_name">
 
-        <activity
-            android:name="com.yunmoxx.store.protector.EmptyActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <service android:name=".ProtectorService"
+        <service
+            android:name=".ProtectorService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.yunmoxx.store.protector.ProtectorService" />

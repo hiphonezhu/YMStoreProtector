@@ -1,7 +1,10 @@
 package com.yunmoxx.store.protector
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_HIGH
+import android.app.Service
 import android.content.*
 import android.os.Build
 import android.os.IBinder
@@ -27,6 +30,7 @@ class ProtectorService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(channelId, "服务监控：守护进程已启动")
         startForeground()
         registerPackageListener(false)
     }
@@ -37,6 +41,7 @@ class ProtectorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
         if (iStoreService == null) {
             startAndBindAppService(mConnection)
         }
@@ -80,11 +85,11 @@ class ProtectorService : Service() {
 
     private val binder = object : IStoreService.Stub() {
         override fun startApp() {
-
-            Log.d(channelId, "服务监控：主程序正在尝试重启守护进程")
-            val intent = Intent(this@ProtectorService, EmptyActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            this@ProtectorService.startActivity(intent)
+            if (iStoreService == null) {
+                Log.d(channelId, "服务监控：主程序正在尝试重启守护进程")
+            } else {
+                Log.d(channelId, "服务监控：主程序正在尝试重启守护进程（守护进程已启动，本次忽略）")
+            }
         }
     }
 
@@ -110,16 +115,10 @@ class ProtectorService : Service() {
     private fun startForeground() {
         createChannelIfNeeded()
 
-        val pendingIntent: PendingIntent =
-            Intent(this, EmptyActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(this, 0, notificationIntent, 0)
-            }
-
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle(getText(R.string.app_name))
             .setContentText("云摩守护进程正在运行，请勿关闭！！！")
             .setSmallIcon(R.drawable.icon_app_logo)
-            .setContentIntent(pendingIntent)
             .build()
 
         startForeground(2020, notification)
