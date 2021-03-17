@@ -69,10 +69,9 @@ class AppDroid : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        val releaseMode = "release" == BuildConfig.BUILD_TYPE
-        UMApp.init(this, releaseMode, if (releaseMode) umAppKeyRelease else umAppKeyDebug)
         loop()
         CrashUtils.init(this)
+        UMApp.init(this, BuildConfig.DEBUG, if ("release" == BuildConfig.BUILD_TYPE) umAppKeyRelease else umAppKeyDebug)
     }
 
     /**

@@ -25,13 +25,5 @@
                 <action android:name="com.yunmoxx.store.protector.ProtectorService" />
             </intent-filter>
         </service>
-
-        <receiver android:name=".PackageListener">
-            <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_INSTALL" />
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" />
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

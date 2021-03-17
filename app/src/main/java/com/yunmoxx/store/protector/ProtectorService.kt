@@ -2,10 +2,7 @@ package com.yunmoxx.store.protector
 
 import android.app.*
 import android.app.NotificationManager.IMPORTANCE_HIGH
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -31,6 +28,7 @@ class ProtectorService : Service() {
     override fun onCreate() {
         super.onCreate()
         startForeground()
+        registerPackageListener(false)
     }
 
     override fun onStart(intent: Intent?, startId: Int) {
@@ -48,7 +46,21 @@ class ProtectorService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopForeground(true)
+        registerPackageListener(true)
     }
+
+    private fun registerPackageListener(unregister: Boolean) {
+        if (unregister) {
+            unregisterReceiver(packageListener)
+        } else {
+            val intentFilter = IntentFilter()
+            intentFilter.addAction(Intent.ACTION_PACKAGE_ADDED)
+            intentFilter.addAction(Intent.ACTION_PACKAGE_REPLACED)
+            registerReceiver(packageListener, intentFilter)
+        }
+    }
+
+    private val packageListener = PackageListener()
 
     private val mConnection = object : ServiceConnection {
 

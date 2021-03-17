@@ -27,18 +27,8 @@ class PackageListener : BroadcastReceiver() {
                     // 主程序升级成功，拉起主程序
                     Log.d("PackageListener", "服务监控：主程序升级成功，拉起主程序")
                     context.startService(Intent(context, ProtectorService::class.java))
-                } else if (context.packageName == packageName) {
-                    // 当前程序升级成功，拉起当前程序
-                    Log.d("PackageListener", "服务监控：当前程序升级成功，拉起当前程序")
-                    triggerRebirth(context)
                 }
             }
         }
-    }
-
-    fun triggerRebirth(context: Context) {
-        val intent = Intent(context, EmptyActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        context.startActivity(intent)
     }
 }
